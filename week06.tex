@@ -1,0 +1,349 @@
+\documentclass[aspectratio=169]{beamer}
+\usetheme[theme=blue,logo=husty70color]{HUST} 
+
+\usepackage[T5]{fontenc}
+\usepackage[utf8]{inputenc}
+% \usepackage[utf8]{vietnam} % Uncomment nếu cần thiết tuỳ hệ thống
+\usepackage{amsmath}
+\usepackage{amsfonts}
+\usepackage{amssymb}
+\usepackage{graphicx}
+\usepackage{adjustbox}
+\usepackage{minted}
+
+\setminted{
+  breaklines=false,
+  autogobble=false,
+  obeytabs=true,
+  tabsize=2,
+  linenos=true,
+  showspaces=false,
+  space=~,
+  baselinestretch=1,
+  fontsize=\normalsize
+}
+
+\newcommand{\placecontent}[4]{%
+  \tikz[remember picture,overlay]
+    \node[anchor=north west]
+      at ([xshift=#1,yshift=-#2]current page.north west)
+      {\parbox{#3}{#4}};
+}
+
+\graphicspath{{./week06_resources/}}
+
+\title{\huge CẤU TRÚC DỮ LIỆU VÀ GIẢI THUẬT}
+\author{SoICT - HUST}
+\date{}
+
+\begin{document}
+
+% 2 slides đầu tiên:
+\HUSTInsertBrandSlide
+\HUSTInsertThemeSlide
+
+% Slide tiêu đề
+{\HUSTUseBackground{onelove.pdf}
+\begin{frame}
+  \ifdefstring{\insertaspectratio}{169}{
+    \HUSTCornerImage[0.14]{assets/logo/soict_vi_h.pdf}
+    \placecontent{0.5cm}{0.33\paperheight}{0.85\paperwidth}{
+        \color{\HUSTFrameTitleTextColor}\bfseries\fontsize{22pt}{30pt}\selectfont
+        \inserttitle
+    }
+    \placecontent{0.5cm}{0.50\paperheight}{0.8\paperwidth}{
+        \color{\HUSTFrameTitleTextColor}\fontsize{14pt}{14pt}\selectfont
+        %Bài học
+        \textbf{\large Bài 6: Thuật toán Quy hoạch động (Dynamic Programming)}\\
+    }
+  }{}
+\end{frame}
+}
+
+% Outline
+\AtBeginSection[]
+{
+    \begin{frame}<beamer>
+        \frametitle{Nội dung}
+        \tableofcontents[currentsection]
+    \end{frame}
+}
+
+%Nội dung chính trong slides
+\section{Giới thiệu về Quy hoạch động}
+\begin{frame}{Giới thiệu}
+  \begin{columns}[c] 
+    % Cột chứa text (chiếm 65% chiều rộng)
+    \begin{column}{0.65\textwidth}
+      \begin{itemize}
+        \item \textbf{Lịch sử:} Thuật toán quy hoạch động (Dynamic Programming - DP) được phát minh bởi Bellman trong thế chiến thứ 2. Tên ban đầu là \textit{multi-stage decision process} (quá trình ra quyết định qua nhiều giai đoạn).
+        \item \textbf{Định nghĩa:} Là kỹ thuật mạnh để giải bài toán tối ưu bằng cách chia thành các bài toán nhỏ hơn và giải các bài toán con \textbf{một lần duy nhất}.
+        \item \textbf{So sánh:} Có nhiều điểm giống với:
+        \begin{itemize}
+            \item Thuật toán Quay lui (Backtracking).
+            \item Thuật toán Chia để trị (Divide and Conquer).
+        \end{itemize}
+      \end{itemize}
+    \end{column}
+    
+    % Cột chứa ảnh (chiếm 33% chiều rộng)
+    \begin{column}{0.33\textwidth}
+      \centering
+      
+      \includegraphics[width=\textwidth]{Bellman.jpg} 
+    \end{column}
+  \end{columns}
+\end{frame}
+%Viết nó ko đc hay
+\begin{frame}{Đặc điểm}
+  \begin{columns}[c] 
+    % Cột chứa text (chiếm 65% chiều rộng)
+    \begin{column}{0.65\textwidth}
+  \begin{itemize}
+    \item \textbf{CHIA} bài toán xuất phát thành các bài toán con không nhất thiết
+độc lập với nhau
+    \item \textbf{GIẢI} các bài toán con từ nhỏ đến lớn, lời giải được lưu trữ lại vào
+bộ nhớ (để đảm bảo mỗi bài toán chỉ giải đúng 1 lần)
+    \begin{itemize}
+        \item Bài toán con nhỏ nhất phải được giải một cách
+trực tiếp, đơn giản
+    \end{itemize}
+    \item \textbf{KẾT HỢP} lời giải của bài toán lớn hơn từ lời giải đã có của các bài
+toán con nhỏ hơn (cần sử dụng cộng thức truy hồi)
+  \end{itemize}
+  \textbf{Lưu ý:} Số lượng bài toán con cần được bị chặn bởi một hàm đa thức của kích thước đầu vào.
+      \end{column}
+    
+    % Cột chứa ảnh (chiếm 33% chiều rộng)
+    \begin{column}{0.33\textwidth}
+      \centering
+      
+      \includegraphics[width=\textwidth]{DP_1.png} 
+    \end{column}
+  \end{columns}
+\end{frame}
+\begin{frame}{Đặc điểm}
+    \begin{itemize}
+    \item So với thuật toán chia để trị, thuật toán quy hoạch động cũng có 3 bước là Chia, Giải bài toán con
+và Kết hợp. Tuy nhiên, trong chia để trị, các bài toán con là độc lập; còn trong quy hoạch động, các
+bài toán con gối nhau hay chồng chéo lên nhau.
+\vspace{0.5em}
+    \item Khó khăn lớn nhất trong đề xuất thuật toán quy hoạch động là Công thức truy hồi (tên khác là Công thức quy hoạch động, Công thức đệ quy)
+    \vspace{0.5em}
+    \item Có 2 cách tiếp cận: Top-Down và Bottom-Up, trong đó Top-Down tự nhiên và dễ hiểu, dễ cài đặt
+toán con nhỏ hơn (cần sử dụng cộng thức truy hồi)
+\vspace{0.5em}
+    \item Thiết kế bộ nhớ ảnh hưởng lớn tới tốc độ của thuật toán
+    \vspace{0.5em}
+    \item Bộ nhớ còn dung để truy vết, tìm ra tường minh lời giải tối ưu
+  \end{itemize}
+  \end{frame}
+\section{Sơ đồ thuật toán}
+
+
+\begin{frame}[fragile]{Mã giả (Pseudo-code)}
+Minh họa kỹ thuật \textit{Memoization} (Top-Down):
+\begin{minted}[fontsize=\scriptsize, frame=single, framesep=1mm]{cpp}
+map<problem, value> Memory; // Bộ nhớ lưu lời giải
+
+value DP(problem P) {
+    // 1. Kiểm tra bước cơ sở
+    if (is_base_case(P)) 
+        return base_case_value(P);
+    
+    // 2. Kiểm tra bộ nhớ (đã giải chưa?)
+    if (Memory.find(P) != Memory.end())
+        return Memory[P];
+
+    // 3. Giải bài toán con và kết hợp
+    value result = some_value;
+    for (problem Q : subproblems(P)) {
+        result = Combine(result, DP(Q));
+    }
+
+    // 4. Lưu kết quả vào bộ nhớ
+    Memory[P] = result;
+    return result;
+}
+\end{minted}
+\end{frame}
+\begin{frame}{Sơ đồ thuật toán chung}
+\centering
+      
+      \includegraphics[width=\textwidth]{DP_2.png} 
+\end{frame}
+\section{Ví dụ minh họa}
+
+\subsection{Đoạn con có tổng lớn nhất}
+\begin{frame}{Ví dụ 1: Đoạn con có tổng lớn nhất}
+  \textbf{Bài toán:} Cho dãy $n$ số nguyên $(a_1, a_2, ..., a_n)$. Hãy tìm đoạn con gồm các phần tử liên tiếp sao cho tổng các phần tử là cực đại.
+  
+  \vspace{0.5em}
+  \textbf{Ví dụ:} Cho dãy 7 số nguyên sau:
+  \begin{figure}[H] 
+    \centering
+    \includegraphics[width=0.8\linewidth]{Ex_1.png}
+\end{figure} 
+  \begin{itemize}
+      \item \textit{Lời giải tối ưu (dãy con có tổng cực đại bằng 8):} $7, -3, 0, -1, 5$ 
+  \end{itemize}
+  \textbf{Nhận xét:}
+  \begin{itemize}
+      \item Thuật toán chia để trị có độ phức tạp O (nlog(n)) , chúng ta có thể làm tốt hơn với thuật toán quy
+hoạch động hay không?
+  \end{itemize}
+\end{frame}
+\begin{frame}{Ví dụ 1: Đoạn con có tổng lớn nhất}
+  \textbf{Bài toán:} Cho dãy $n$ số nguyên $(a_1, a_2, ..., a_n)$. Hãy tìm đoạn con gồm các phần tử liên tiếp sao cho tổng các phần tử là cực đại.
+  
+  \vspace{0.5em}
+  \begin{itemize}
+    \item \textbf{Xác định bài toán con:} $P_i$ là bài toán tìm đoạn con bao gồm các phần tử liên tiếp có tổng lớn nhất mà phần tử cuối cùng là $a_i$, với mọi $i = 1, \dots, n$.
+\end{itemize}
+
+  \begin{figure}[H] 
+    \centering
+    \includegraphics[width=0.8\linewidth]{Ex_2.png}
+\end{figure} 
+\end{frame}
+\begin{frame}{Ví dụ 1: Đoạn con có tổng lớn nhất}
+\begin{itemize}
+    \item \textbf{Bài toán:} Cho dãy $n$ số nguyên $(a_1, a_2, ..., a_n)$. Hãy tìm đoạn con gồm các phần tử liên tiếp sao cho tổng các phần tử là cực đại.
+    
+    \item \textbf{Xác định bài toán con:} $P_i$ là bài toán tìm đoạn con bao gồm các phần tử liên tiếp của dãy $a_1, a_2, \dots, a_i$ có tổng lớn nhất mà phần tử cuối cùng là $a_i$, với mọi $i = 1, \dots, n$.
+    
+    \item \textbf{Công thức quy hoạch động} (công thức kết hợp lời giải các bài toán con để thu được lời giải bài toán cha): Gọi $S_i$ là tổng các phần tử của lời giải của $P_i, \forall i = 1, \dots, n$:
+    \[
+        S_1 = a_1,
+    \]
+    \[
+        S_i = \begin{cases} 
+            S_{i-1} + a_i & \text{nếu } S_{i-1} > 0 \\
+            a_i & \text{nếu } S_{i-1} \leq 0 
+        \end{cases}
+    \]
+\end{itemize}
+\end{frame}
+
+\begin{frame}{Minh họa chạy tay}
+  Dãy $A$: $-16, \quad 7, \quad -3, \quad 0, \quad -1, \quad 5, \quad -4$
+  
+  \begin{itemize}
+      \item $S_1 = -16$
+      \item $S_2 = a_2 = 7$ (do $S_1 < 0$)
+      \item $S_3 = S_2 + a_3 = 7 + (-3) = 4$
+      \item $S_4 = S_3 + 0 = 4$
+      \item $S_5 = S_4 + (-1) = 3$
+      \item $S_6 = S_5 + 5 = 8$
+      \item $S_7 = S_6 + (-4) = 4$
+  \end{itemize}
+  
+  $\Rightarrow$ Kết quả: $\max(S) = 8$.
+\end{frame}
+\begin{frame}{Ví dụ 1: Đoạn con có tổng lớn nhất}
+\begin{itemize}
+    \item \textbf{Công thức quy hoạch động} (công thức kết hợp lời giải các bài toán con để thu được lời giải bài toán cha):Gọi $S_i$ là tổng các phần tử của lời giải của $P_i, \forall i = 1, ..., n$. Ta có: $S_1 = a_1$,$$S_i = \begin{cases} S_{i-1} + a_i & \text{nếu } S_{i-1} > 0 \\ a_i & \text{nếu } S_{i-1} \le 0 \end{cases}$$
+    
+    \item \textbf{Lời giải}: Tổng của các phần tử của đoạn con bao gồm các phần tử liên tiếp của dãy có tổng các phần tử được chọn lớn nhất là:\textbf{$$\max(S_1, S_2, ..., S_n) = 8$$}
+    
+    \item \textbf{Độ phức tạp thuật toán}: $O(n)$
+\end{itemize}
+\end{frame}
+\subsection{Dãy con chung dài nhất}
+\begin{frame}{Ví dụ 2: Dãy con chung dài nhất}
+    \begin{itemize}
+        \item \textbf{Bài toán: }Cho 2 dãy ký tự $X = (x_1, x_2, ..., x_n)$ và $Y = (y_1, ..., y_m)$. Một dãy con của $A$ là một dãy thu được bằng cách xóa đi một số phần tử trong $A$. Hãy tìm độ dài của dãy con chung dài nhất của 2 $X$ và $Y$.
+        \item \textbf{Ví dụ:}
+        \begin{itemize}
+            \item $X = $"$abcb$" và $Y = $"$bdcab$" 
+            \item Dãy con chung dài nhất của 2 dãy là dãy "$bcb$" với độ dài 3
+        \end{itemize}
+        \item \textbf{Nhận xét:} Thuật toán vét cạn, so sánh tất cả các dãy con của $X$ và $Y$ sẽ có độ phức tạp $O(2^n \times 2^m \times \max(m, n))$. Chúng ta có thể giải bài toán này nhanh hơn với một thuật toán quy hoạch động hay không?
+    \end{itemize}
+\end{frame}
+\begin{frame}{Ví dụ 2: Dãy con chung dài nhất}
+  \textbf{Bài toán:} Cho 2 dãy $X = (x_1, ..., x_n)$ và $Y = (y_1, ..., y_m)$. Tìm độ dài dãy con chung dài nhất của X và Y (dãy con thu được bằng cách xóa một số phần tử, giữ nguyên thứ tự).
+  
+  \vspace{0.5em}
+  \textbf{Bài toán con:} Gọi $S(i, j)$ là độ dài của dãy con chung dài nhất của 2 dãy, dãy con của X là $X_i = (x_1...x_i)$ với  $i \in \{1, ..., n\}$ và dãy con của $Y$ là $Y_j = (y_1, ..., y_j)$ với $j \in \{1, ..., m\}$.
+  
+  \vspace{0.5em}
+  \textbf{Bài toán cơ sở (Mở rộng chỉ số bắt đầu từ 0 thay vì 1:}
+$$S(i, 0) = 0, \forall i \in \{1, ..., n\}$$
+$$S(0, j) = 0, \forall j \in \{1, ..., m\}$$
+\end{frame}
+
+\begin{frame}{Ví dụ 2: Dãy con chung dài nhất}
+  \begin{columns}[c] 
+    % Cột chứa text (chiếm 65% chiều rộng)
+    \begin{column}{0.5\textwidth}
+    \small
+  \textbf{Công thức truy hồi:}
+  $$ S(i, j) = \begin{cases} 
+      S(i-1, j-1) + 1 & \text{nếu } x_i = y_j \\
+      \max(S(i-1, j), S(i, j-1)) & \text{ngược lại} 
+  \end{cases} $$
+    \end{column}
+    
+    % Cột chứa ảnh (chiếm 33% chiều rộng)
+    \begin{column}{0.4\textwidth}
+      \centering
+      
+      \includegraphics[width=\textwidth]{Ex_3.png} 
+    \end{column}
+  \end{columns}
+\end{frame}
+\begin{frame}{Ví dụ 2: Dãy con chung dài nhất}
+\begin{itemize}
+    \item \textbf{Xác định bài toán con:} Gọi $S(i, j)$ là độ dài của dãy con chung dài nhất của 2 dãy, dãy con của $X$ là $X_i = (x_1, ..., x_i)$ với $i \in \{1, ..., n\}$ và dãy con của $Y$ là $Y_j = (y_1, ..., y_j)$ với $j \in \{1, ..., m\}$.
+    \item \textbf{Bài toán cơ sở} (mở rộng chỉ số: bắt đầu từ 0 thay vì 1):$$S(i, 0) = 0, \forall i \in \{1, ..., n\}$$$$S(0, j) = 0, \forall j \in \{1, ..., m\}$$
+    \item \textbf{Công thức quy hoạch động}:$$S(i, j) = \begin{cases} S(i-1, j-1) + 1 & \text{nếu } x_i = y_j \\ \max\{S(i-1, j), S(i, j-1)\} & \text{ngược lại} \end{cases}$$
+    \item \textbf{Độ phức tạp thuật toán}: $O(n \times m)$
+\end{itemize}
+
+\end{frame}
+
+\section{Bài tập}
+\begin{frame}{Bài tập 1: Dãy con tăng chặt dài nhất}
+  \textbf{Đề bài:} Cho dãy số nguyên $A = (a_1, ..., a_n)$ các phần tử đôi một khác nhau. Tìm độ dài của dãy con tăng chặt dài nhất (dãy con $b_1, ..., b_k$ sao cho $b_i < b_{i+1}$).
+  
+  \vspace{1em}
+  \textbf{Hình thức:} 
+  \begin{itemize}
+      \item Làm tại nhà.
+      \item Nộp trên hệ thống chấm code.
+  \end{itemize}
+\end{frame}
+
+\begin{frame}{Bài tập 2: Dãy con cấp số cộng}
+  \textbf{Đề bài:} Cho dãy $A = (a_1, ..., a_n)$. Tìm độ dài dãy con của $A$ là một cấp số cộng với bước nhảy bằng 1 ($d=1$) và có độ dài lớn nhất.
+  
+  \vspace{1em}
+  \textbf{Hình thức:} 
+  \begin{itemize}
+      \item Làm tại nhà.
+      \item Nộp trên hệ thống chấm code.
+  \end{itemize}
+\end{frame}
+
+
+%Hết
+
+{\HUSTUseBackground{theme_hust_oneside.pdf}
+\begin{frame}
+  \ifdefstring{\insertaspectratio}{169}{
+    \placecontent{0.355\paperwidth}{0.410\paperheight}{0.640\paperwidth}{
+        \color{HUSTRed}\bfseries\fontsize{28pt}{36pt}\selectfont\centering
+        THANK YOU!
+    }
+  }{}
+  \ifdefstring{\insertaspectratio}{43}{
+    \placecontent{0.355\paperwidth}{0.440\paperheight}{0.640\paperwidth}{
+        \color{HUSTRed}\bfseries\fontsize{28pt}{36pt}\selectfont\centering
+        THANK YOU!
+    }
+  }{}
+\end{frame}
+}
+
+\end{document}
